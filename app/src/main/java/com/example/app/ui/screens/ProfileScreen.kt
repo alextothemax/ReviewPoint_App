@@ -92,7 +92,10 @@ fun ProfileScreen() {
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
-                UserInfoSection(currentUser)
+                UserInfoSection(
+                    user = currentUser,
+                    onLogout = { UserRepository.logout() }
+                )
             }
             item {
                 AwardSystemSection(currentUser)
@@ -102,7 +105,7 @@ fun ProfileScreen() {
 }
 
 @Composable
-fun UserInfoSection(user: User) {
+fun UserInfoSection(user: User, onLogout: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -141,8 +144,8 @@ fun UserInfoSection(user: User) {
                     }
                 }
             }
-            IconButton(onClick = { /* Edit profile */ }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = ReviewRed)
+            TextButton(onClick = onLogout) {
+                Text("Log out", color = ReviewRed, fontWeight = FontWeight.Bold)
             }
         }
     }

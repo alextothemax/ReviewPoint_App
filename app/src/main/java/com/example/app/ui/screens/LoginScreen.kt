@@ -24,6 +24,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -58,8 +59,17 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                emailError = null
+            },
             label = { Text("Email") },
+            isError = emailError != null,
+            supportingText = {
+                if (emailError != null) {
+                    Text(text = emailError!!)
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
@@ -77,9 +87,14 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
         Button(
             onClick = {
-                if (name.isNotBlank() && email.isNotBlank()) {
-                    UserRepository.login(name, email)
-                    onLoginSuccess()
+                val trimmedEmail = email.trim().lowercase()
+                if (trimmedEmail.endsWith("@gmail.com") && trimmedEmail.substringBefore("@gmail.com").length >= 3) {
+                    if (name.isNotBlank()) {
+                        UserRepository.login(name, email)
+                        onLoginSuccess()
+                    }
+                } else {
+                    emailError = "Email invalid"
                 }
             },
             modifier = Modifier
