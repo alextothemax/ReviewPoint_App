@@ -10,7 +10,8 @@ data class Reviewer(
     val views: Int,
     val rating: Double,
     val uploaderBadge: Badge? = null,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val localFileName: String? = null // Persistent file reference
 )
 
 enum class Badge(val title: String, val uploadsRequired: Int, val minRating: Double = 0.0) {

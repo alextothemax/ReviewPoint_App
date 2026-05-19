@@ -20,7 +20,7 @@ import com.example.app.data.ReviewerRepository
 import com.example.app.data.UserRepository
 import com.example.app.model.Reviewer
 import com.example.app.ui.components.ReviewerCard
-import com.example.app.ui.theme.ReviewRed
+import com.example.app.ui.theme.*
 
 @Composable
 fun OverviewScreen() {
@@ -32,7 +32,7 @@ fun OverviewScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(BackgroundWhite)
     ) {
         // Header
         Row(
@@ -42,11 +42,11 @@ fun OverviewScreen() {
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextOnRed)
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = "Overview",
-                color = Color.White,
+                color = TextOnRed,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -58,12 +58,12 @@ fun OverviewScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Text("My Uploaded Reviewers", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("My Uploaded Reviewers", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
             }
             if (myReviewers.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text("You haven't uploaded any reviewers yet.", color = Color.Gray)
+                        Text("You haven't uploaded any reviewers yet.", color = TextSecondary, fontWeight = FontWeight.Medium)
                     }
                 }
             } else {
@@ -101,8 +101,8 @@ fun MyReviewerCard(reviewer: Reviewer) {
 @Composable
 fun StatItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Gray)
+        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = TextSecondary)
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Text(text, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
     }
 }

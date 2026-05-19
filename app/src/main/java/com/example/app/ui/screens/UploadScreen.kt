@@ -1,5 +1,6 @@
 package com.example.app.ui.screens
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -16,14 +17,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.app.data.ReviewerRepository
 import com.example.app.data.UserRepository
 import com.example.app.model.Reviewer
 import com.example.app.ui.components.allAvailableSubjects
-import com.example.app.ui.theme.ReviewRed
+import com.example.app.ui.theme.*
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,19 +36,38 @@ fun UploadScreen(onBack: () -> Unit = {}) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var selectedFiles by remember { mutableStateOf(listOf<String>()) }
+    
+    // Store selected URI and name
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedFileName by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
 
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments()
-    ) { uris ->
-        selectedFiles += uris.map { uri ->
-            // In a real app, we'd get the actual file name from the URI
-            uri.lastPathSegment ?: "Unknown File"
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            selectedFileUri = uri
+            selectedFileName = uri.lastPathSegment ?: "Selected File"
         }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val currentUser by UserRepository.currentUser
+    val scrollState = rememberScrollState()
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = ReviewRed,
+        unfocusedLabelColor = TextSecondary,
+        focusedBorderColor = ReviewRed,
+        unfocusedBorderColor = Color.LightGray,
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted
+    )
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -58,14 +80,16 @@ fun UploadScreen(onBack: () -> Unit = {}) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextOnRed)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Upload Reviewer",
-                    color = Color.White,
+                    color = TextOnRed,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -74,13 +98,13 @@ fun UploadScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF5F5F5))
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .background(BackgroundWhite)
+                .verticalScroll(scrollState)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Subject Dropdown
-            Text("Subject:", fontWeight = FontWeight.SemiBold)
+            Text("Subject:", fontWeight = FontWeight.Bold, color = TextPrimary)
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded },
@@ -95,18 +119,16 @@ fun UploadScreen(onBack: () -> Unit = {}) {
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    colors = textFieldColors
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(Color.White)
                 ) {
                     allAvailableSubjects.forEach { selectionOption ->
                         DropdownMenuItem(
-                            text = { Text(selectionOption.name) },
+                            text = { Text(selectionOption.name, color = TextPrimary) },
                             onClick = {
                                 subject = selectionOption.name
                                 expanded = false
@@ -117,17 +139,15 @@ fun UploadScreen(onBack: () -> Unit = {}) {
             }
 
             // Title
-            Text("Reviewer Title:", fontWeight = FontWeight.SemiBold)
+            Text("Reviewer Title:", fontWeight = FontWeight.Bold, color = TextPrimary)
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("e.g. Basics of Organic Chemistry") },
                 shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                colors = textFieldColors,
+                singleLine = true
             )
 
             // Upload File Section
@@ -136,80 +156,91 @@ fun UploadScreen(onBack: () -> Unit = {}) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Upload Files:", fontWeight = FontWeight.SemiBold)
-                TextButton(onClick = { filePickerLauncher.launch(arrayOf("*/*")) }) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text("Upload File:", fontWeight = FontWeight.Bold, color = TextPrimary)
+                TextButton(onClick = { 
+                    filePickerLauncher.launch(arrayOf(
+                        "application/pdf", 
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
+                        "application/vnd.ms-powerpoint", // ppt
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation" // pptx
+                    )) 
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = ReviewRed)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Select Files")
+                    Text(if (selectedFileName == null) "Select File" else "Change File", color = ReviewRed, fontWeight = FontWeight.Bold)
                 }
             }
             
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (selectedFiles.isEmpty()) {
-                    Text(
-                        "No files selected",
-                        color = Color.Gray,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-                selectedFiles.forEach { fileName ->
-                    FileItem(
-                        fileName = fileName,
-                        iconColor = Color(0xFFC62828),
-                        icon = Icons.Default.Description,
-                        onDelete = {
-                            selectedFiles = selectedFiles.filter { it != fileName }
-                        }
-                    )
-                }
+            if (selectedFileName != null) {
+                FileItem(
+                    fileName = selectedFileName!!,
+                    iconColor = Color(0xFFC62828),
+                    icon = Icons.Default.Description,
+                    onDelete = {
+                        selectedFileUri = null
+                        selectedFileName = null
+                    }
+                )
+            } else {
+                Text(
+                    "No file selected",
+                    color = TextSecondary,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
 
             // Description
-            Text("Description:", fontWeight = FontWeight.SemiBold)
+            Text("Description:", fontWeight = FontWeight.Bold, color = TextPrimary)
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp),
+                    .heightIn(min = 120.dp),
                 placeholder = { Text("Enter a brief description of the reviewer...") },
                 shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                colors = textFieldColors
             )
 
-            Spacer(modifier = Modifier.weight(1.0f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Upload Button
             Button(
                 onClick = {
-                    if (title.isNotBlank() && subject.isNotBlank()) {
-                        val newReviewer = Reviewer(
-                            id = UUID.randomUUID().toString(),
-                            title = title,
-                            subject = subject,
-                            uploaderName = currentUser?.name ?: "Guest",
-                            uploadTimeAgo = "Just now",
-                            downloads = 0,
-                            views = 0,
-                            rating = 0.0,
-                            timestamp = System.currentTimeMillis()
-                        )
-                        ReviewerRepository.addReviewer(newReviewer)
-                        onBack()
+                    if (title.isNotBlank() && subject.isNotBlank() && selectedFileUri != null) {
+                        // 1. Copy file to internal storage
+                        val localName = ReviewerRepository.saveFileToInternal(context, selectedFileUri!!)
+                        
+                        if (localName != null) {
+                            // 2. Add to repository
+                            val newReviewer = Reviewer(
+                                id = UUID.randomUUID().toString(),
+                                title = title,
+                                subject = subject,
+                                uploaderName = currentUser?.name ?: "Guest",
+                                uploadTimeAgo = "Just now",
+                                downloads = 0,
+                                views = 0,
+                                rating = 0.0,
+                                timestamp = System.currentTimeMillis(),
+                                localFileName = localName
+                            )
+                            ReviewerRepository.addReviewer(newReviewer)
+                            onBack()
+                        } else {
+                            // Show error
+                        }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .heightIn(min = 56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ReviewRed),
                 shape = RoundedCornerShape(12.dp),
-                enabled = title.isNotBlank() && selectedFiles.isNotEmpty()
+                enabled = title.isNotBlank() && selectedFileUri != null
             ) {
-                Text("Upload", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Upload", color = TextOnRed, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
         }
     }
@@ -232,10 +263,9 @@ fun FileItem(
     ) {
         Icon(icon, contentDescription = null, tint = iconColor)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(fileName, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Text(fileName, fontSize = 14.sp, color = TextPrimary, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Gray, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = TextSecondary, modifier = Modifier.size(18.dp))
         }
     }
 }
-

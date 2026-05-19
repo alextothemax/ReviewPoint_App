@@ -15,13 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.app.data.ReviewerRepository
 import com.example.app.data.UserRepository
-import com.example.app.model.Reviewer
 import com.example.app.ui.components.*
-import com.example.app.ui.theme.ReviewRed
+import com.example.app.ui.theme.*
 import java.util.*
 
 @Composable
@@ -31,13 +32,10 @@ fun HomeScreen(
     onAboutClick: () -> Unit,
     onSearchClick: () -> Unit
 ) {
-    // Database Logic: Get Top Reviewers sorted by Ranking (Stars) and Downloads
-    val topReviewers = remember { ReviewerRepository.getTopReviewers() }
+    val recentReviewers = remember { ReviewerRepository.getLatestReviewers() }
 
-    // Database Logic: Determine top subjects based on most reviewers available
     val topFourSubjects = remember {
         val rankedSubjectNames = ReviewerRepository.getTopSubjects(4)
-
         val topSubjects = rankedSubjectNames.mapNotNull { name ->
             allAvailableSubjects.find { it.name == name }
         }.toMutableList()
@@ -96,7 +94,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(BackgroundWhite)
     ) {
         HeaderSection(onAboutClick = onAboutClick)
 
@@ -106,11 +104,9 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     WelcomeSection(name = currentUser?.name?.split(" ")?.firstOrNull() ?: "Guest")
-                    Spacer(modifier = Modifier.height(8.dp))
                     QuoteSection(quote = currentQuote)
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
             item {
@@ -125,12 +121,12 @@ fun HomeScreen(
             }
             item {
                 LatestReviewersHeader(
-                    title = "Top Reviewers",
-                    actionText = "Latest Reviewers",
+                    title = "Most Recent Reviewers",
+                    actionText = "See all",
                     onViewAll = onViewLatestReviewers
                 )
             }
-            items(topReviewers) { reviewer ->
+            items(recentReviewers.take(5)) { reviewer ->
                 ReviewerCard(reviewer)
             }
         }
@@ -139,21 +135,26 @@ fun HomeScreen(
 
 @Composable
 fun HeaderSection(onAboutClick: () -> Unit) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ReviewRed, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-            .clickable { onAboutClick() }
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { onAboutClick() },
+        color = ReviewRed,
+        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
     ) {
-        Text(
-            text = "ReviewPoint",
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "ReviewPoint",
+                color = TextOnRed,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -161,26 +162,27 @@ fun HeaderSection(onAboutClick: () -> Unit) {
 fun QuoteSection(quote: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f)), // Increased alpha for better contrast
+        shape = RoundedCornerShape(12.dp),
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.FormatQuote,
                 contentDescription = null,
-                tint = ReviewRed.copy(alpha = 0.6f),
+                tint = ReviewRed,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = quote,
                 fontSize = 14.sp,
                 fontStyle = FontStyle.Italic,
-                color = Color.DarkGray,
-                fontWeight = FontWeight.Medium
+                color = TextSecondary,
+                fontWeight = FontWeight.Medium,
+                lineHeight = 20.sp
             )
         }
     }
@@ -192,7 +194,7 @@ fun WelcomeSection(name: String) {
         text = "Welcome, $name!",
         fontSize = 22.sp,
         fontWeight = FontWeight.Bold,
-        color = Color.Black
+        color = TextPrimary
     )
 }
 
@@ -206,14 +208,14 @@ private fun HomeSearchBar(onSearchClick: () -> Unit) {
             .fillMaxWidth()
             .clickable { onSearchClick() },
         enabled = false,
-        placeholder = { Text("Search") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        placeholder = { Text("Search reviewers...", color = TextMuted) },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary) },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             disabledContainerColor = Color.White,
             disabledBorderColor = Color.LightGray,
-            disabledLeadingIconColor = Color.Gray,
-            disabledPlaceholderColor = Color.Gray
+            disabledLeadingIconColor = TextSecondary,
+            disabledPlaceholderColor = TextMuted
         )
     )
 }

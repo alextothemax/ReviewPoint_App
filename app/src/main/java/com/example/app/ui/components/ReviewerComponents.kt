@@ -14,13 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.data.ReviewerRepository
 import com.example.app.model.Badge
 import com.example.app.model.Reviewer
-import com.example.app.ui.theme.ReviewRed
-import com.example.app.ui.theme.ReviewYellow
+import com.example.app.ui.theme.*
 
 @Composable
 fun TopSubjectsSection(
@@ -33,8 +35,7 @@ fun TopSubjectsSection(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Top Subjects", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            // "Greater than" icon removed as per request
+            Text("Top Subjects", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -61,11 +62,11 @@ fun SubjectItem(subject: Subject, onClick: () -> Unit = {}) {
                 imageVector = subject.icon,
                 contentDescription = subject.name,
                 modifier = Modifier.padding(16.dp),
-                tint = Color.Gray
+                tint = TextSecondary
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(subject.name, fontSize = 12.sp)
+        Text(subject.name, fontSize = 12.sp, color = TextPrimary, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -80,13 +81,16 @@ fun SectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text(
-            actionText,
-            color = ReviewRed,
-            fontSize = 14.sp,
-            modifier = Modifier.clickable { onActionClick() }
-        )
+        Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
+        if (actionText.isNotEmpty()) {
+            Text(
+                actionText,
+                color = ReviewRed,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onActionClick() }
+            )
+        }
     }
 }
 
@@ -105,15 +109,21 @@ fun LatestReviewersHeader(
 
 @Composable
 fun ReviewerCard(reviewer: Reviewer) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Surface(
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(56.dp),
                 shape = RoundedCornerShape(8.dp),
                 color = Color(0xFFE0F2F1)
             ) {
@@ -124,40 +134,89 @@ fun ReviewerCard(reviewer: Reviewer) {
                     tint = Color(0xFF00796B)
                 )
             }
+            
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(reviewer.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(reviewer.subject, fontSize = 14.sp, color = Color.Gray)
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = reviewer.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = reviewer.subject,
+                    fontSize = 14.sp,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    repeat(5) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = ReviewYellow, modifier = Modifier.size(16.dp))
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("${reviewer.downloads} Downloads", fontSize = 12.sp, color = Color.Gray)
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(16.dp), tint = ReviewYellow)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("${reviewer.uploaderName}, ${reviewer.uploadTimeAgo}", fontSize = 12.sp, color = Color.Gray)
-                    
-                    reviewer.uploaderBadge?.let { badge ->
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = ReviewRed.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                badge.title,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                                fontSize = 10.sp,
-                                color = ReviewRed,
-                                fontWeight = FontWeight.Bold
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.weight(1f, fill = false)) {
+                        repeat(5) { index ->
+                            val starRating = index + 1
+                            Icon(
+                                imageVector = if (starRating <= reviewer.rating) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = null,
+                                tint = ReviewYellow,
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .clickable { ReviewerRepository.rateReviewer(reviewer.id, starRating.toDouble()) }
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${reviewer.downloads}",
+                        fontSize = 12.sp,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp), tint = TextPrimary)
                 }
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(14.dp), tint = ReviewYellow)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = reviewer.uploaderName,
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Text(
+                        text = " • ${reviewer.uploadTimeAgo}",
+                        fontSize = 12.sp,
+                        color = TextMuted,
+                        maxLines = 1
+                    )
+                }
+            }
+            
+            IconButton(
+                onClick = { ReviewerRepository.downloadReviewer(context, reviewer) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = "Download",
+                    tint = ReviewRed
+                )
             }
         }
     }

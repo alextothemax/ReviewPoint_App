@@ -14,7 +14,6 @@ import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,8 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.app.ui.theme.ReviewRed
-import com.example.app.ui.theme.ReviewYellow
+import com.example.app.ui.theme.*
 
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
@@ -40,7 +38,7 @@ fun AboutScreen(onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(BackgroundWhite)
             .verticalScroll(rememberScrollState())
     ) {
         // Header
@@ -52,12 +50,12 @@ fun AboutScreen(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextOnRed)
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "About ReviewPoint",
-                color = Color.White,
+                color = TextOnRed,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -192,7 +190,7 @@ fun InfoCard(
                     textAlign = TextAlign.Center,
                     fontSize = 16.sp,
                     lineHeight = 26.sp,
-                    color = Color(0xFF424242),
+                    color = TextSecondary,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -233,7 +231,7 @@ fun DeveloperSection() {
             text = "Visionary Developer",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Gray,
+            color = TextPrimary,
             letterSpacing = 2.sp
         )
         
@@ -261,7 +259,7 @@ fun DeveloperSection() {
             text = "Empowering students through technology and collaboration.",
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
-            color = Color.Gray,
+            color = TextSecondary,
             modifier = Modifier.padding(horizontal = 32.dp)
         )
     }

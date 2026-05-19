@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.app.data.ReviewerRepository
 import com.example.app.ui.components.*
-import com.example.app.ui.theme.ReviewRed
+import com.example.app.ui.theme.*
 
 @Composable
 fun SearchScreen(
@@ -27,10 +27,9 @@ fun SearchScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     
-    // Database Logic: Get Latest Reviewers sorted newest to oldest
-    val latestReviewers = remember { ReviewerRepository.getLatestReviewers() }
+    val topReviewers = remember { ReviewerRepository.getTopReviewers() }
+    val allReviewers = ReviewerRepository.reviewers
 
-    // Database Logic: Determine top subjects based on most reviewers available
     val topFourSubjects = remember {
         val rankedSubjectNames = ReviewerRepository.getTopSubjects(4)
 
@@ -48,12 +47,11 @@ fun SearchScreen(
         topSubjects.toList()
     }
 
-    // Filtering logic
     val filteredReviewers = remember(searchQuery) {
         if (searchQuery.isEmpty()) {
             emptyList()
         } else {
-            latestReviewers.filter { reviewer ->
+            allReviewers.filter { reviewer ->
                 reviewer.subject.contains(searchQuery, ignoreCase = true) ||
                 reviewer.title.contains(searchQuery, ignoreCase = true) ||
                 reviewer.uploaderName.contains(searchQuery, ignoreCase = true)
@@ -64,7 +62,7 @@ fun SearchScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(BackgroundWhite)
     ) {
         // Header
         Row(
@@ -75,11 +73,11 @@ fun SearchScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextOnRed)
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = "Reviewer Library",
-                color = Color.White,
+                color = TextOnRed,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -103,11 +101,11 @@ fun SearchScreen(
                 }
                 item {
                     LatestReviewersHeader(
-                        title = "Most Recent Reviewers",
+                        title = "Top Reviewers",
                         actionText = ""
                     )
                 }
-                items(latestReviewers) { reviewer ->
+                items(topReviewers) { reviewer ->
                     ReviewerCard(reviewer)
                 }
             } else {
@@ -116,6 +114,7 @@ fun SearchScreen(
                         text = "Search Results",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
+                        color = TextPrimary,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -129,9 +128,9 @@ fun SearchScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             val emptyMessage = when {
-                                !latestReviewers.any { it.uploaderName.contains(searchQuery, ignoreCase = true) } -> 
+                                !allReviewers.any { it.uploaderName.contains(searchQuery, ignoreCase = true) } -> 
                                     "No author named \"$searchQuery\" is available."
-                                !latestReviewers.any { it.subject.contains(searchQuery, ignoreCase = true) } ->
+                                !allReviewers.any { it.subject.contains(searchQuery, ignoreCase = true) } ->
                                     "No Reviewer is Currently Available for this subject."
                                 else -> "No Reviewers matching your search were found."
                             }
@@ -139,8 +138,9 @@ fun SearchScreen(
                             Text(
                                 text = emptyMessage,
                                 textAlign = TextAlign.Center,
-                                color = Color.Gray,
-                                fontSize = 16.sp
+                                color = TextSecondary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
@@ -161,20 +161,25 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text("Search") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        placeholder = { Text("Search by title, subject, or author...", color = TextMuted) },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear search")
+                    Icon(Icons.Default.Close, contentDescription = "Clear search", tint = TextSecondary)
                 }
             }
         },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
-            unfocusedBorderColor = Color.LightGray
+            focusedBorderColor = ReviewRed,
+            unfocusedBorderColor = Color.LightGray,
+            focusedPlaceholderColor = TextMuted,
+            unfocusedPlaceholderColor = TextMuted
         )
     )
 }

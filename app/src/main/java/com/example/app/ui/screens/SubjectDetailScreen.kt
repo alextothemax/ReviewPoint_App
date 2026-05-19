@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.app.data.ReviewerRepository
 import com.example.app.ui.components.ReviewerCard
-import com.example.app.ui.theme.ReviewRed
+import com.example.app.ui.theme.*
 
 @Composable
 fun SubjectDetailScreen(subjectName: String, onBack: () -> Unit) {
@@ -29,7 +29,7 @@ fun SubjectDetailScreen(subjectName: String, onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(BackgroundWhite)
     ) {
         // Header
         Row(
@@ -40,12 +40,12 @@ fun SubjectDetailScreen(subjectName: String, onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextOnRed)
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = subjectName,
-                color = Color.White,
+                color = TextOnRed,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -59,8 +59,8 @@ fun SubjectDetailScreen(subjectName: String, onBack: () -> Unit) {
                 Text(
                     text = "No Reviewer is Currently Available",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
+                    fontWeight = FontWeight.Bold,
+                    color = TextSecondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(32.dp)
                 )

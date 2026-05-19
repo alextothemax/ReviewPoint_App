@@ -17,17 +17,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.app.data.ReviewerRepository
 import com.example.app.ui.components.ReviewerCard
-import com.example.app.ui.theme.ReviewRed
+import com.example.app.ui.theme.*
 
 @Composable
 fun LatestReviewersScreen(onBack: () -> Unit) {
-    // Database Logic: Get latest reviewers from repository
     val latestReviewers = ReviewerRepository.getLatestReviewers()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(BackgroundWhite)
     ) {
         // Header
         Row(
@@ -38,12 +37,12 @@ fun LatestReviewersScreen(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextOnRed)
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Latest Reviewers",
-                color = Color.White,
+                color = TextOnRed,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -68,8 +67,9 @@ fun LatestReviewersScreen(onBack: () -> Unit) {
                     Text(
                         text = "You've reached the end of the latest reviewers",
                         fontSize = 14.sp,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
